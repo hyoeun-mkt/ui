@@ -15,11 +15,10 @@
 </style>
 </head>
 <body>
-
 <div id="root" class="min-h-screen bg-[#020816] lg:px-6 lg:py-6"></div>
 
 <script>
-// ─── 원본 데이터 ───────────────────────────────────────────────────────────────
+// ─── 데이터 ────────────────────────────────────────────────────────────────────
 const legacyServers = ["데포로쥬","판도라","듀크데필","파푸리온","린드비오르","군터","하딘","아툰","케레니스","이실로테","켄라우헬","데스나이트","안타라스","발라카스","사이하","질리언","블루디카","라스타바드","기르타스","진 기르타스","그림리퍼","발록"];
 const rebootServers = ["말하는 섬","윈다우드","글루디오","그레시아"];
 const serverOptions = [...legacyServers, ...rebootServers];
@@ -68,109 +67,159 @@ function isStepComplete(idx) {
   }
 }
 
-// ─── CSS 클래스 ────────────────────────────────────────────────────────────────
-const screenClass = "mx-auto h-[100dvh] w-full overflow-hidden bg-[#091431] text-white shadow-[0_30px_80px_rgba(0,0,0,0.45)] flex flex-col lg:h-[calc(100dvh-48px)] lg:max-w-[1280px] lg:rounded-[32px] lg:border lg:border-slate-800";
+// ─── CSS ──────────────────────────────────────────────────────────────────────
 const sectionCard = "rounded-[26px] border border-slate-700/80 bg-[#121d3a]";
 const labelClass = "mb-2 block text-sm font-semibold text-slate-200";
 const inputClass = "w-full rounded-2xl border border-slate-700 bg-[#202d4d] px-4 py-3.5 text-sm text-white placeholder:text-slate-500 focus:border-amber-400 focus:outline-none";
 
-// ─── 헬퍼 ─────────────────────────────────────────────────────────────────────
-function update(key, value) { form[key] = value; render(); }
-function toggle(key) { form[key] = !form[key]; render(); }
+// ─── update: 스크롤 유지하며 부분 업데이트 ────────────────────────────────────
+function update(key, value) {
+  form[key] = value;
+  // 서버 변경 시 서버상세 리셋 + 콘텐츠 재렌더 필요
+  if (key === 'server') { form.serverDetail = ''; renderContent(); }
+  updateHeader();
+  updateBottomBar();
+}
 
+function toggle(key) {
+  form[key] = !form[key];
+  updateToggleBtn(key);
+  updateHeader();
+  updateBottomBar();
+}
+
+// 토글 버튼만 교체
+function updateToggleBtn(key) {
+  const btn = document.querySelector(`[data-toggle="${key}"]`);
+  if (!btn) return;
+  const invert = btn.dataset.invert === "true";
+  const val = invert ? !form[key] : form[key];
+  btn.querySelector('.toggle-track').className = `toggle-track relative h-7 w-12 rounded-full transition ${val?"bg-emerald-400":"bg-slate-600"}`;
+  btn.querySelector('.toggle-thumb').className = `toggle-thumb absolute top-1 h-5 w-5 rounded-full bg-white transition ${val?"left-6":"left-1"}`;
+}
+
+// 헤더 상태만 갱신
+function updateHeader() {
+  const complete = isStepComplete(step);
+  steps.forEach((_, idx) => {
+    const btn = document.querySelector(`[data-step-index="${idx}"]`);
+    if (!btn) return;
+    const active = idx === step;
+    const done = idx < step && isStepComplete(idx);
+    btn.className = `flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-bold transition ${
+      done ? "border-emerald-400 bg-emerald-500/15 text-emerald-300"
+      : active ? "border-amber-400 bg-amber-500/15 text-amber-300"
+      : "border-slate-700 bg-[#1b2745] text-slate-300"}`;
+    const dot = btn.querySelector('.step-dot');
+    if (dot) dot.className = `step-dot flex h-5 w-5 items-center justify-center rounded-full text-[11px] ${
+      done?"bg-emerald-400 text-slate-950":active?"bg-amber-400 text-slate-950":"bg-slate-700 text-white"}`;
+  });
+  const warn = document.getElementById("step-warn");
+  if (warn) warn.style.display = (!complete && step < steps.length-1) ? "" : "none";
+}
+
+// 하단 버튼 상태만 갱신
+function updateBottomBar() {
+  const complete = isStepComplete(step);
+  const isLast = step === steps.length - 1;
+  const nextBtn = document.getElementById("btn-next");
+  if (!nextBtn) return;
+  nextBtn.className = (!isLast && !complete)
+    ? "flex-1 rounded-2xl px-5 py-4 text-sm font-black lg:max-w-[220px] bg-amber-500/40 text-slate-800 cursor-not-allowed"
+    : "flex-1 rounded-2xl px-5 py-4 text-sm font-black lg:max-w-[220px] bg-amber-500 text-slate-950";
+}
+
+function updatePrevBtn() {
+  const btn = document.getElementById("btn-prev");
+  if (!btn) return;
+  btn.disabled = step === 0;
+  btn.className = step === 0
+    ? "flex-1 rounded-2xl border px-5 py-4 text-sm font-bold lg:max-w-[180px] border-slate-800 bg-slate-900 text-slate-600 cursor-not-allowed"
+    : "flex-1 rounded-2xl border px-5 py-4 text-sm font-bold lg:max-w-[180px] border-slate-700 bg-[#1b2745] text-slate-100";
+}
+
+// ─── 스텝 이동 ─────────────────────────────────────────────────────────────────
 function setStep(idx) {
   step = idx;
-  render();
+  renderContent();
+  updateHeader();
+  updateBottomBar();
+  updatePrevBtn();
+  // 다음 버튼 onclick 교체 (마지막 스텝 여부)
+  const nextBtn = document.getElementById("btn-next");
+  if (nextBtn) {
+    nextBtn.textContent = (idx === steps.length-1) ? "판매 등록하기" : "다음 →";
+    nextBtn.onclick = (idx === steps.length-1) ? ()=>alert('판매 등록이 완료되었습니다!') : goNext;
+  }
   setTimeout(() => {
     const ca = document.getElementById("content-area");
-    if(ca) ca.scrollTop = 0;
+    if (ca) ca.scrollTop = 0;
     const btn = document.querySelector(`[data-step-index="${idx}"]`);
-    if(btn) btn.scrollIntoView({behavior:"smooth", inline:"center", block:"nearest"});
-  }, 50);
+    if (btn) btn.scrollIntoView({behavior:"smooth", inline:"center", block:"nearest"});
+  }, 30);
 }
 
 function goNext() {
-  if(step < steps.length-1 && !isStepComplete(step)) return;
+  if (step < steps.length-1 && !isStepComplete(step)) return;
   setStep(Math.min(step+1, steps.length-1));
 }
 function goPrev() { setStep(Math.max(step-1, 0)); }
 
-// ─── HTML 생성 헬퍼 ────────────────────────────────────────────────────────────
-function el(tag, attrs, ...children) {
-  const a = Object.entries(attrs||{}).map(([k,v])=>`${k}="${v}"`).join(" ");
-  return `<${tag}${a?" "+a:""}>${children.join("")}</${tag}>`;
-}
-
-function selectEl(key, options, extra="") {
-  const opts = options.map(o=>`<option${form[key]===o?" selected":""}>${o}</option>`).join("");
-  return `<select class="${inputClass}" data-key="${key}" onchange="update('${key}',this.value)"${extra}><option value="">선택</option>${opts}</select>`;
-}
-
-function inputEl(key, placeholder="", type="text") {
-  return `<input class="${inputClass}" type="${type}" data-key="${key}" value="${form[key]||""}" placeholder="${placeholder}" oninput="update('${key}',this.value)"/>`;
-}
-
-function textareaEl(key, placeholder="", extra="") {
-  return `<textarea class="${inputClass} min-h-[96px] resize-none" data-key="${key}" placeholder="${placeholder}" oninput="update('${key}',this.value)"${extra}>${form[key]||""}</textarea>`;
-}
-
-function toggleRow(label, key, invertDisplay=false) {
-  const val = invertDisplay ? !form[key] : form[key];
+// ─── 헬퍼 ─────────────────────────────────────────────────────────────────────
+function toggleRow(label, key, invert=false) {
+  const val = invert ? !form[key] : form[key];
   return `
-  <button type="button" onclick="toggle('${key}')" class="flex w-full items-center justify-between rounded-2xl border border-slate-700 bg-[#1b2745] px-4 py-4 text-left">
+  <button type="button" data-toggle="${key}" data-invert="${invert}" onclick="toggle('${key}')"
+    class="flex w-full items-center justify-between rounded-2xl border border-slate-700 bg-[#1b2745] px-4 py-4 text-left">
     <span class="text-sm font-medium text-slate-100">${label}</span>
-    <span class="relative h-7 w-12 rounded-full transition ${val?"bg-emerald-400":"bg-slate-600"}">
-      <span class="absolute top-1 h-5 w-5 rounded-full bg-white transition ${val?"left-6":"left-1"}"></span>
+    <span class="toggle-track relative h-7 w-12 rounded-full transition ${val?"bg-emerald-400":"bg-slate-600"}">
+      <span class="toggle-thumb absolute top-1 h-5 w-5 rounded-full bg-white transition ${val?"left-6":"left-1"}"></span>
     </span>
   </button>`;
 }
 
 function choiceBtn(key, value, label) {
   const active = form[key] === value;
-  return `<button type="button" onclick="update('${key}','${value}')" class="rounded-2xl border px-4 py-3 text-sm font-bold transition ${active?"border-amber-400 bg-amber-500/15 text-amber-300 shadow-lg shadow-amber-500/10":"border-slate-700 bg-[#1b2745] text-slate-200"}">${label}</button>`;
+  return `<button type="button" onclick="update('${key}','${value}')" class="rounded-2xl border px-4 py-3 text-sm font-bold transition ${active?"border-amber-400 bg-amber-500/15 text-amber-300":"border-slate-700 bg-[#1b2745] text-slate-200"}">${label}</button>`;
 }
 
-// ─── 스텝 콘텐츠 ──────────────────────────────────────────────────────────────
+// ─── 스텝 HTML ─────────────────────────────────────────────────────────────────
 function renderStep0() {
-  const serverSelectOpts = serverOptions.map(s=>`<option${form.server===s?` selected`:""}>${s}</option>`).join("");
-  const detailOpts = serverDetails.map(d=>`<option${form.serverDetail===d?` selected`:""}>${d}</option>`).join("");
-  const classOpts = classOptions.map(c=>`<option${form.className===c?` selected`:""}>${c}</option>`).join("");
-
+  const serverOpts = serverOptions.map(s=>`<option${form.server===s?" selected":""}>${s}</option>`).join("");
+  const detailOpts = serverDetails.map(d=>`<option${form.serverDetail===d?" selected":""}>${d}</option>`).join("");
+  const classOpts = classOptions.map(c=>`<option${form.className===c?" selected":""}>${c}</option>`).join("");
   const bartemPanel = isBartemImportOpen ? `
     <div class="mt-4 rounded-2xl border border-slate-600 bg-[#202d4d] p-4">
       <div class="text-sm font-bold text-white">바로템 상품 불러오기</div>
       <div class="mt-1 text-xs leading-5 text-slate-400">바로템에 등록된 상품 URL을 입력하면 등록 정보를 자동으로 반영할 수 있도록 연결하는 영역입니다.</div>
       <div class="mt-3 space-y-3">
-        <input class="${inputClass}" value="${bartemUrl}" oninput="bartemUrl=this.value;render()" placeholder="바로템 상품 URL 입력"/>
+        <input class="${inputClass}" value="${bartemUrl}" oninput="bartemUrl=this.value" placeholder="바로템 상품 URL 입력"/>
         <div class="flex gap-2">
           <button type="button" ${!bartemUrl.trim()?"disabled":""} class="flex-1 rounded-xl px-4 py-3 text-sm font-bold ${bartemUrl.trim()?"bg-amber-500 text-slate-950":"bg-amber-500/40 text-slate-800 cursor-not-allowed"}">등록 정보 불러오기</button>
-          <button type="button" onclick="isBartemImportOpen=false;bartemUrl='';render()" class="rounded-xl border border-slate-600 px-4 py-3 text-sm font-bold text-slate-200">닫기</button>
+          <button type="button" onclick="isBartemImportOpen=false;bartemUrl='';renderContent()" class="rounded-xl border border-slate-600 px-4 py-3 text-sm font-bold text-slate-200">닫기</button>
         </div>
       </div>
     </div>` : "";
-
   return `<div class="space-y-5">
     <section class="${sectionCard} p-5">
       <h2 class="mb-4 text-lg font-black text-white">서버 / 클래스</h2>
       <div class="space-y-4">
-        <div>
-          <label class="${labelClass}">서버 선택</label>
-          <select class="${inputClass}" onchange="update('server',this.value);update('serverDetail','')">
-            <option value="">서버 선택</option>${serverSelectOpts}
-          </select>
-        </div>
-        ${form.server ? `<div><label class="${labelClass}">서버 상세</label>
+        <div><label class="${labelClass}">서버 선택</label>
+          <select class="${inputClass}" onchange="update('server',this.value)">
+            <option value="">서버 선택</option>${serverOpts}
+          </select></div>
+        ${form.server?`<div><label class="${labelClass}">서버 상세</label>
           <select class="${inputClass}" onchange="update('serverDetail',this.value)">
             <option value="">서버 상세 선택</option>${detailOpts}
-          </select></div>` : ""}
+          </select></div>`:""}
         <div><label class="${labelClass}">캐릭터명</label>
-          <input class="${inputClass}" value="${form.characterName}" oninput="update('characterName',this.value)" placeholder="캐릭터명 입력"/></div>
+          <input class="${inputClass}" data-key="characterName" value="${form.characterName}" oninput="update('characterName',this.value)" placeholder="캐릭터명 입력"/></div>
         <div><label class="${labelClass}">클래스 선택</label>
           <select class="${inputClass}" onchange="update('className',this.value)">
             <option value="">클래스 선택</option>${classOpts}
           </select></div>
         <div class="rounded-2xl border border-slate-700 bg-[#1b2745] p-4">
-          <button type="button" onclick="isBartemImportOpen=!isBartemImportOpen;render()" class="w-full rounded-xl bg-sky-500 px-4 py-3 text-sm font-bold text-white transition hover:bg-sky-400">바로템에 등록된 정보 가져오기</button>
+          <button type="button" onclick="isBartemImportOpen=!isBartemImportOpen;renderContent()" class="w-full rounded-xl bg-sky-500 px-4 py-3 text-sm font-bold text-white transition hover:bg-sky-400">바로템에 등록된 정보 가져오기</button>
           <div class="mt-2 text-xs text-slate-400">* 등록된 정보를 반영하여 자동으로 입력됩니다</div>
           ${bartemPanel}
         </div>
@@ -186,11 +235,13 @@ function renderStep1() {
     <section class="${sectionCard} p-5">
       <h2 class="mb-4 text-lg font-black text-white">기본 판매 정보</h2>
       <div class="space-y-4">
-        <div><label class="${labelClass}">현재 레벨</label><input class="${inputClass}" value="${form.level}" oninput="update('level',this.value)" placeholder="예: 89"/></div>
+        <div><label class="${labelClass}">현재 레벨</label>
+          <input class="${inputClass}" data-key="level" value="${form.level}" oninput="update('level',this.value)" placeholder="예: 89"/></div>
         <div><label class="${labelClass}">전투력 <span class="text-xs text-slate-400">(캐릭터 정보 기준)</span></label>
-          <input class="${inputClass}" value="${form.combatPower}" oninput="update('combatPower',this.value)" placeholder="예: 32767"/>
+          <input class="${inputClass}" data-key="combatPower" value="${form.combatPower}" oninput="update('combatPower',this.value)" placeholder="예: 32767"/>
           <div class="mt-1 text-xs text-slate-400">※ 실제 성능은 아래 스탯/스킬 기준으로 판단됩니다</div></div>
-        <div><label class="${labelClass}">판매 가격</label><input class="${inputClass}" value="${form.price}" oninput="update('price',this.value)" placeholder="예: 250000"/></div>
+        <div><label class="${labelClass}">판매 가격</label>
+          <input class="${inputClass}" data-key="price" value="${form.price}" oninput="update('price',this.value)" placeholder="예: 250000"/></div>
         <div class="grid grid-cols-2 gap-3">
           <div><label class="${labelClass}">계정 종류</label>
             <select class="${inputClass}" onchange="update('accountType',this.value)">
@@ -215,13 +266,15 @@ function renderStep2() {
     <section class="${sectionCard} p-5">
       <h2 class="mb-4 text-lg font-black text-white">핵심 전투 스펙</h2>
       <div class="grid grid-cols-2 gap-3">
-        ${combatFields.map(([k,l])=>`<div><label class="${labelClass}">${l}</label><input class="${inputClass}" value="${form[k]||""}" oninput="update('${k}',this.value)" placeholder="숫자 입력"/></div>`).join("")}
+        ${combatFields.map(([k,l])=>`<div><label class="${labelClass}">${l}</label>
+          <input class="${inputClass}" data-key="${k}" value="${form[k]||""}" oninput="update('${k}',this.value)" placeholder="숫자 입력"/></div>`).join("")}
       </div>
     </section>
     <section class="${sectionCard} p-5">
       <h2 class="mb-4 text-lg font-black text-white">기본 스탯</h2>
       <div class="grid grid-cols-2 gap-3">
-        ${statFields.map(([code,title])=>`<div><label class="${labelClass}">${code} (${title})</label><input class="${inputClass}" value="${form[code.toLowerCase()]||""}" oninput="update('${code.toLowerCase()}',this.value)" placeholder="${code} 수치"/></div>`).join("")}
+        ${statFields.map(([code,title])=>`<div><label class="${labelClass}">${code} (${title})</label>
+          <input class="${inputClass}" data-key="${code.toLowerCase()}" value="${form[code.toLowerCase()]||""}" oninput="update('${code.toLowerCase()}',this.value)" placeholder="${code} 수치"/></div>`).join("")}
       </div>
     </section>
   </div>`;
@@ -234,15 +287,19 @@ function renderStep3() {
     <section class="${sectionCard} p-5">
       <h2 class="mb-4 text-lg font-black text-white">스킬 정보</h2>
       <div class="grid grid-cols-3 gap-3">
-        ${skillRows.map(([k,l])=>`<div><label class="${labelClass}">${l}</label><input class="${inputClass}" value="${form[k]||""}" oninput="update('${k}',this.value)" placeholder="0"/></div>`).join("")}
+        ${skillRows.map(([k,l])=>`<div><label class="${labelClass}">${l}</label>
+          <input class="${inputClass}" data-key="${k}" value="${form[k]||""}" oninput="update('${k}',this.value)" placeholder="0"/></div>`).join("")}
       </div>
       <div class="mt-4"><label class="${labelClass}">주요 스킬명 <span class="text-xs text-slate-400">(선택)</span></label>
-        <textarea class="${inputClass} min-h-[96px] resize-none" oninput="update('mainSkills',this.value)" placeholder="선택 입력 (자동으로 판단에 반영되지 않아도 됨)">${form.mainSkills||""}</textarea></div>
+        <textarea class="${inputClass} min-h-[96px] resize-none" data-key="mainSkills" oninput="update('mainSkills',this.value)" placeholder="선택 입력">${form.mainSkills||""}</textarea></div>
     </section>
     <section class="${sectionCard} p-5">
       <h2 class="mb-4 text-lg font-black text-white">변신 / 마법인형 / 성물 <span class="text-xs text-slate-400">(간략 입력)</span></h2>
       <div class="space-y-3">
-        ${collectRows.map(([k,t])=>`<div class="rounded-2xl border border-slate-700 bg-[#1b2745] p-4"><label class="${labelClass}">${t}</label><textarea class="${inputClass} min-h-[84px] resize-none" oninput="update('${k}',this.value)" placeholder="예: 전설 3 / 신화 1 (간단 입력)">${form[k]||""}</textarea></div>`).join("")}
+        ${collectRows.map(([k,t])=>`<div class="rounded-2xl border border-slate-700 bg-[#1b2745] p-4">
+          <label class="${labelClass}">${t}</label>
+          <textarea class="${inputClass} min-h-[84px] resize-none" data-key="${k}" oninput="update('${k}',this.value)" placeholder="예: 전설 3 / 신화 1">${form[k]||""}</textarea>
+        </div>`).join("")}
       </div>
     </section>
   </div>`;
@@ -253,19 +310,19 @@ function renderStep4() {
     <section class="${sectionCard} p-5">
       <h2 class="mb-4 text-lg font-black text-white">장비 정보 <span class="text-xs text-slate-400">(핵심만)</span></h2>
       <div class="space-y-4">
-        <input class="${inputClass}" value="${form.weapon||""}" oninput="update('weapon',this.value)" placeholder="주요 무기 입력"/>
-        <input class="${inputClass}" value="${form.armor||""}" oninput="update('armor',this.value)" placeholder="주요 방어구 입력"/>
-        <input class="${inputClass}" value="${form.accessories||""}" oninput="update('accessories',this.value)" placeholder="주요 악세 입력"/>
+        <input class="${inputClass}" data-key="weapon" value="${form.weapon||""}" oninput="update('weapon',this.value)" placeholder="주요 무기 입력"/>
+        <input class="${inputClass}" data-key="armor" value="${form.armor||""}" oninput="update('armor',this.value)" placeholder="주요 방어구 입력"/>
+        <input class="${inputClass}" data-key="accessories" value="${form.accessories||""}" oninput="update('accessories',this.value)" placeholder="주요 악세 입력"/>
       </div>
     </section>
     <section class="${sectionCard} p-5">
       <h2 class="mb-4 text-lg font-black text-white">재화 / 추가 가치 요소</h2>
       <div class="space-y-4">
         <div class="grid grid-cols-2 gap-3">
-          <input class="${inputClass}" value="${form.adena||""}" oninput="update('adena',this.value)" placeholder="아데나"/>
-          <input class="${inputClass}" value="${form.diamond||""}" oninput="update('diamond',this.value)" placeholder="다이아"/>
+          <input class="${inputClass}" data-key="adena" value="${form.adena||""}" oninput="update('adena',this.value)" placeholder="아데나"/>
+          <input class="${inputClass}" data-key="diamond" value="${form.diamond||""}" oninput="update('diamond',this.value)" placeholder="다이아"/>
         </div>
-        <textarea class="${inputClass} min-h-[100px] resize-none" oninput="update('collection',this.value)" placeholder="컬렉션 / 문양 / 휘장 / 숙련 등 추가 가치 요소 입력">${form.collection||""}</textarea>
+        <textarea class="${inputClass} min-h-[100px] resize-none" data-key="collection" oninput="update('collection',this.value)" placeholder="컬렉션 / 문양 / 휘장 / 숙련 등 추가 가치 요소 입력">${form.collection||""}</textarea>
       </div>
     </section>
   </div>`;
@@ -298,7 +355,8 @@ function renderStep5() {
           <select class="${inputClass}" onchange="update('afterSupport',this.value)">
             ${supports.map(s=>`<option${form.afterSupport===s?" selected":""}>${s}</option>`).join("")}
           </select></div>
-        <textarea class="${inputClass} min-h-[140px] resize-none" oninput="update('description',this.value)" placeholder="구매자가 바로 이해할 수 있도록 핵심 내용을 입력해 주세요. 예: 89렙 뇌신 / 전설 변신·인형·성물 / 선물 가능 / 복구 이력 없음">${form.description||""}</textarea>
+        <textarea class="${inputClass} min-h-[140px] resize-none" data-key="description" oninput="update('description',this.value)"
+          placeholder="구매자가 바로 이해할 수 있도록 핵심 내용을 입력해 주세요. 예: 89렙 뇌신 / 전설 변신·인형·성물 / 선물 가능 / 복구 이력 없음">${form.description||""}</textarea>
       </div>
     </section>
   </div>`;
@@ -320,7 +378,8 @@ function renderStep6() {
     <section class="${sectionCard} p-5">
       <h2 class="mb-4 text-lg font-black text-white">확인 사항</h2>
       <div class="space-y-3">
-        ${checks.map(item=>`<label class="flex items-center gap-3 rounded-2xl border border-slate-700 bg-[#1b2745] px-4 py-4 text-sm text-slate-100"><input type="checkbox" class="h-4 w-4 rounded"/> ${item}</label>`).join("")}
+        ${checks.map(item=>`<label class="flex items-center gap-3 rounded-2xl border border-slate-700 bg-[#1b2745] px-4 py-4 text-sm text-slate-100">
+          <input type="checkbox" class="h-4 w-4 rounded"/> ${item}</label>`).join("")}
       </div>
     </section>
   </div>`;
@@ -330,40 +389,21 @@ function renderStep7() {
   const ranged = ["요정","총사"].includes(form.className);
   const dmg = ranged ? (form.rangedDamage||"-") : (form.nearbyDamage||"-");
   const summaryItems = [
-    ["서버", form.server||"-"],["서버 상세", form.serverDetail||"-"],
-    ["캐릭터명", form.characterName||"-"],["클래스", form.className||"-"],
-    ["레벨", form.level||"-"],["전투력", form.combatPower||"-"],
-    ["판매가", form.price?`${form.price}원`:"-"],
-    ["계정 종류", form.accountType||"-"],["계정 이력", form.accountHistory||"-"],
-    ["핵심 전투 스펙", `${dmg} / ${form.accuracy||"-"} / ${form.sp||"-"}`],
+    ["서버",form.server||"-"],["서버 상세",form.serverDetail||"-"],
+    ["캐릭터명",form.characterName||"-"],["클래스",form.className||"-"],
+    ["레벨",form.level||"-"],["전투력",form.combatPower||"-"],
+    ["판매가",form.price?`${form.price}원`:"-"],
+    ["계정 종류",form.accountType||"-"],["계정 이력",form.accountHistory||"-"],
+    ["핵심 전투 스펙",`${dmg} / ${form.accuracy||"-"} / ${form.sp||"-"}`],
   ];
   return `<div class="space-y-5">
-    <section class="${sectionCard} overflow-hidden">
-      <div class="border-b border-slate-700 bg-gradient-to-r from-amber-500/15 to-transparent px-5 py-4">
-        <div class="text-xs font-semibold tracking-[0.18em] text-amber-300/80">PREVIEW</div>
-        <h2 class="mt-1 text-xl font-black text-white">판매 정보 미리 보기</h2>
-      </div>
-      <div class="p-5">
-        <div class="rounded-[24px] border border-amber-500/20 bg-[#0b1328] p-5">
-          <div class="text-lg font-black text-white">${form.server||"서버 선택"} ${form.serverDetail||""} · ${form.className||"클래스 선택"}</div>
-          <div class="mt-4 grid grid-cols-2 gap-3">
-            ${[["레벨",form.level||"-"],["전투력",form.combatPower||"-"],["판매가",form.price?`${form.price}원`:"-"],form.accountType?["계정 종류",form.accountType]:null,["핵심 전투 스펙",`${dmg} / ${form.accuracy||"-"} / ${form.sp||"-"}`],form.accountHistory?["계정 이력",form.accountHistory]:null].filter(Boolean).map(([k,v])=>`<div class="rounded-2xl border border-slate-800 bg-slate-900 px-4 py-3"><div class="text-[11px] text-slate-500">${k}</div><div class="mt-1 text-sm font-bold text-white">${v}</div></div>`).join("")}
-          </div>
-          <div class="mt-4 rounded-2xl border border-slate-800 bg-slate-900 px-4 py-4">
-            <div class="text-xs text-slate-500">장비</div>
-            <p class="mt-2 text-sm text-slate-200">${form.weapon||"무기 없음"} / ${form.armor||"방어구 없음"} / ${form.accessories||"악세 없음"}</p>
-          </div>
-          <div class="mt-4 rounded-2xl border border-slate-800 bg-slate-900 px-4 py-4">
-            <div class="text-xs text-slate-500">판매 설명</div>
-            <p class="mt-2 text-sm leading-6 text-slate-200">${form.description||"판매자가 입력한 상세 설명이 여기에 노출됩니다."}</p>
-          </div>
-        </div>
-      </div>
-    </section>
     <section class="${sectionCard} p-5">
       <h3 class="mb-4 text-lg font-black text-white">입력 정보 요약</h3>
       <div class="grid grid-cols-2 gap-3">
-        ${summaryItems.map(([k,v])=>`<div class="rounded-2xl border border-slate-700 bg-[#1b2745] px-4 py-3"><div class="text-[11px] text-slate-500">${k}</div><div class="mt-1 text-sm font-bold text-white">${v}</div></div>`).join("")}
+        ${summaryItems.map(([k,v])=>`<div class="rounded-2xl border border-slate-700 bg-[#1b2745] px-4 py-3">
+          <div class="text-[11px] text-slate-500">${k}</div>
+          <div class="mt-1 text-sm font-bold text-white">${v}</div>
+        </div>`).join("")}
       </div>
     </section>
     <section class="${sectionCard} p-5">
@@ -373,124 +413,109 @@ function renderStep7() {
   </div>`;
 }
 
-function renderCurrentStep() {
+function getStepHTML() {
   const fns = [renderStep0,renderStep1,renderStep2,renderStep3,renderStep4,renderStep5,renderStep6,renderStep7];
   return (fns[step]||renderStep7)();
 }
 
-// ─── 우측 미리보기 ─────────────────────────────────────────────────────────────
-function renderDesktopPreview() {
-  const ranged = ["요정","총사"].includes(form.className);
-  const dmg = ranged ? (form.rangedDamage||"-") : (form.nearbyDamage||"-");
-  const previewItems = [
-    ["레벨",form.level||"-"],["전투력",form.combatPower||"-"],
-    ["판매가",form.price?`${form.price}원`:"-"],
-    ...(form.accountType?[["계정 종류",form.accountType]]:[]),
-    ["핵심 전투 스펙",`${dmg} / ${form.accuracy||"-"} / ${form.sp||"-"}`],
-    ...(form.accountHistory?[["계정 이력",form.accountHistory]]:[]),
-  ];
-  return `<aside class="space-y-5">
-    <section class="hidden lg:block rounded-[28px] border border-slate-700/80 bg-[#121d3a] overflow-hidden">
-      <div class="border-b border-slate-700 bg-gradient-to-r from-amber-500/15 to-transparent px-6 py-5">
-        <div class="text-xs font-semibold tracking-[0.18em] text-amber-300/80">LIVE PREVIEW</div>
-        <h2 class="mt-1 text-xl font-black text-white">판매 정보 미리 보기</h2>
-      </div>
-      <div class="p-6">
-        <div class="rounded-[24px] border border-amber-500/20 bg-[#0b1328] p-5">
-          <div class="text-lg font-black text-white">${form.server||"서버 선택"} ${form.serverDetail||""} · ${form.characterName||"캐릭터명"} · ${form.className||"클래스 선택"}</div>
-          <div class="mt-4 grid grid-cols-2 gap-3">
-            ${previewItems.map(([k,v])=>`<div class="rounded-2xl border border-slate-800 bg-slate-900 px-4 py-3"><div class="text-[11px] text-slate-500">${k}</div><div class="mt-1 text-sm font-bold text-white">${v}</div></div>`).join("")}
-          </div>
-          <div class="mt-4 rounded-2xl border border-slate-800 bg-slate-900 px-4 py-4">
-            <div class="text-xs text-slate-500">판매 설명</div>
-            <p class="mt-2 text-sm leading-6 text-slate-200">${form.description||"판매자가 입력한 상세 설명이 여기에 노출됩니다."}</p>
-          </div>
-        </div>
-      </div>
-    </section>
-  </aside>`;
+// ─── 콘텐츠 영역만 교체 (스크롤 위치 유지) ────────────────────────────────────
+function renderContent() {
+  const area = document.getElementById("content-area");
+  if (!area) return;
+  // 포커스 중인 input의 key와 selectionStart를 기억
+  const focused = document.activeElement;
+  const focusKey = focused ? focused.dataset.key : null;
+  const focusSel = focused ? focused.selectionStart : null;
+
+  area.innerHTML = `<div class="fade-up">${getStepHTML()}</div>`;
+
+  // 포커스 복원
+  if (focusKey) {
+    const el = area.querySelector(`[data-key="${focusKey}"]`);
+    if (el) {
+      el.focus();
+      if (focusSel !== null && el.setSelectionRange) {
+        try { el.setSelectionRange(focusSel, focusSel); } catch(e){}
+      }
+    }
+  }
 }
 
-// ─── 메인 렌더 ─────────────────────────────────────────────────────────────────
-function render() {
+// ─── 최초 전체 렌더 (1회만 실행) ──────────────────────────────────────────────
+function renderAll() {
   const complete = isStepComplete(step);
   const isLast = step === steps.length - 1;
 
-  // 스텝 네비
   const navBtns = steps.map((item,idx) => {
     const active = idx === step;
     const done = idx < step && isStepComplete(idx);
-    const cls = done
-      ? "border-emerald-400 bg-emerald-500/15 text-emerald-300"
-      : active
-      ? "border-amber-400 bg-amber-500/15 text-amber-300"
+    const cls = done ? "border-emerald-400 bg-emerald-500/15 text-emerald-300"
+      : active ? "border-amber-400 bg-amber-500/15 text-amber-300"
       : "border-slate-700 bg-[#1b2745] text-slate-300";
     const dotCls = done ? "bg-emerald-400 text-slate-950" : active ? "bg-amber-400 text-slate-950" : "bg-slate-700 text-white";
-    return `<button type="button" data-step-index="${idx}" onclick="setStep(${idx})" class="flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-bold transition ${cls}">
-      <span class="flex h-5 w-5 items-center justify-center rounded-full text-[11px] ${dotCls}">${done?"✓":idx+1}</span>
+    return `<button type="button" data-step-index="${idx}" onclick="setStep(${idx})"
+      class="flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-bold transition ${cls}">
+      <span class="step-dot flex h-5 w-5 items-center justify-center rounded-full text-[11px] ${dotCls}">${done?"✓":idx+1}</span>
       <span>${item.title}</span>
     </button>`;
   }).join("");
 
-  // 이전 버튼
-  const prevCls = step === 0
-    ? "flex-1 rounded-2xl border px-5 py-4 text-sm font-bold lg:max-w-[180px] border-slate-800 bg-slate-900 text-slate-600 cursor-not-allowed"
-    : "flex-1 rounded-2xl border px-5 py-4 text-sm font-bold lg:max-w-[180px] border-slate-700 bg-[#1b2745] text-slate-100";
-
-  // 다음 버튼
+  const prevCls = "flex-1 rounded-2xl border px-5 py-4 text-sm font-bold lg:max-w-[180px] border-slate-800 bg-slate-900 text-slate-600 cursor-not-allowed";
   const nextCls = (!isLast && !complete)
     ? "flex-1 rounded-2xl px-5 py-4 text-sm font-black lg:max-w-[220px] bg-amber-500/40 text-slate-800 cursor-not-allowed"
     : "flex-1 rounded-2xl px-5 py-4 text-sm font-black lg:max-w-[220px] bg-amber-500 text-slate-950";
 
   document.getElementById("root").innerHTML = `
-  <div class="${screenClass}">
-    <!-- 헤더 -->
+  <div class="mx-auto h-[100dvh] w-full overflow-hidden bg-[#091431] text-white shadow-[0_30px_80px_rgba(0,0,0,0.45)] flex flex-col lg:h-[calc(100dvh-48px)] lg:max-w-[1280px] lg:rounded-[32px] lg:border lg:border-slate-800">
+
     <div class="shrink-0 border-b border-slate-800 bg-[#091431]/95 px-5 pb-4 pt-5 backdrop-blur lg:px-8 lg:pb-5 lg:pt-6">
       <div class="mb-4 flex items-center gap-3 lg:mb-5">
         <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#0ea5e9] shadow-md">
           <span class="text-lg font-black text-white">M</span>
         </div>
-        <div>
-          <h1 class="text-[26px] font-black tracking-tight text-white lg:text-[30px]">리니지M 계정 판매</h1>
-        </div>
+        <h1 class="text-[26px] font-black tracking-tight text-white lg:text-[30px]">리니지M 계정 판매</h1>
       </div>
-
-      <!-- 스텝 네비 -->
       <div class="overflow-x-auto pb-1 hide-scrollbar">
         <div id="step-nav" class="flex min-w-max items-center gap-2">${navBtns}</div>
       </div>
-
-      <!-- 현재 스텝 정보 -->
       <div class="mt-4">
         <div class="text-xs font-semibold text-slate-400">STEP ${step+1} / ${steps.length}</div>
-        <div class="mt-1 text-lg font-black text-white">${steps[step].title}</div>
-        ${(!complete && step < steps.length-1) ? `<div class="mt-1 text-xs text-rose-300">필수 입력값을 채워야 다음 단계로 이동할 수 있습니다.</div>` : ""}
+        <div id="step-title" class="mt-1 text-lg font-black text-white">${steps[step].title}</div>
+        <div id="step-warn" class="mt-1 text-xs text-rose-300" style="${(!complete && step < steps.length-1)?'':'display:none'}">필수 입력값을 채워야 다음 단계로 이동할 수 있습니다.</div>
       </div>
     </div>
 
-    <!-- 본문 -->
     <div class="flex flex-1 overflow-hidden">
       <div id="content-area" class="flex-1 overflow-y-auto px-5 py-5 hide-scrollbar lg:px-8 lg:py-6">
-        <div class="fade-up">${renderCurrentStep()}</div>
-      </div>
-      <div class="hidden lg:block lg:w-[380px] lg:shrink-0 lg:overflow-y-auto lg:border-l lg:border-slate-800 lg:bg-[#0d1733] lg:px-6 lg:py-6 hide-scrollbar">
-        ${renderDesktopPreview()}
+        <div class="fade-up">${getStepHTML()}</div>
       </div>
     </div>
 
-    <!-- 하단 버튼 -->
     <div class="shrink-0 border-t border-slate-800 bg-[#091431]/95 px-5 py-4 backdrop-blur lg:px-8 lg:py-5">
       <div class="flex gap-3 lg:justify-end">
-        <button type="button" onclick="goPrev()" ${step===0?"disabled":""} class="${prevCls}">← 이전</button>
-        <button type="button" onclick="${isLast?"alert('판매 등록이 완료되었습니다!')":"goNext()"}" class="${nextCls}">
-          ${isLast?"판매 등록하기":"다음 →"}
-        </button>
+        <button id="btn-prev" type="button" onclick="goPrev()" disabled class="${prevCls}">← 이전</button>
+        <button id="btn-next" type="button" class="${nextCls}">${isLast?"판매 등록하기":"다음 →"}</button>
       </div>
     </div>
   </div>`;
+
+  // btn-next onclick 설정
+  const nextBtn = document.getElementById("btn-next");
+  nextBtn.onclick = isLast ? ()=>alert('판매 등록이 완료되었습니다!') : goNext;
+
+  // input에 data-key 추가 (renderContent에서도 포커스 복원에 사용)
+  // -> 각 renderStep 함수 내 input/textarea에 직접 data-key 삽입
 }
 
-render();
+// ─── input/textarea에 data-key 추가를 위한 래퍼 ─────────────────────────────
+// renderContent 호출 후 data-key가 없는 요소에 자동 부여
+// (대신 각 renderStep에서 oninput 이벤트가 update()를 호출할 때 key를 넘기므로
+//  포커스 복원용으로만 data-key를 쓴다. 아래처럼 oninput 앞에 this.dataset.key 설정)
+// -> 이미 각 input에 oninput 내에서 key를 명시하고 있으므로,
+//    data-key를 HTML에 직접 추가하는 방식으로 처리.
+// (renderStep 함수들의 input에 data-key="..." 속성 추가는 위에서 완료)
+
+renderAll();
 </script>
 </body>
 </html>
