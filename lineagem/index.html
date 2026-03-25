@@ -68,7 +68,7 @@ function isStepComplete(idx) {
 }
 
 // ─── CSS ──────────────────────────────────────────────────────────────────────
-const sectionCard = "rounded-[26px] border border-slate-700/80 bg-[#121d3a]";
+const sectionCard = "rounded-[20px] border border-slate-700/80 bg-[#121d3a]";
 const labelClass = "mb-2 block text-sm font-semibold text-slate-200";
 const inputClass = "w-full rounded-2xl border border-slate-700 bg-[#202d4d] px-4 py-3.5 text-sm text-white placeholder:text-slate-500 focus:border-amber-400 focus:outline-none";
 
@@ -125,8 +125,8 @@ function updateBottomBar() {
   const nextBtn = document.getElementById("btn-next");
   if (!nextBtn) return;
   nextBtn.className = (!isLast && !complete)
-    ? "flex-1 rounded-2xl px-5 py-4 text-sm font-black lg:max-w-[220px] bg-amber-500/40 text-slate-800 cursor-not-allowed"
-    : "flex-1 rounded-2xl px-5 py-4 text-sm font-black lg:max-w-[220px] bg-amber-500 text-slate-950";
+    ? "w-[200px] rounded-2xl px-5 py-4 text-sm font-black text-center bg-amber-500/40 text-slate-800 cursor-not-allowed"
+    : "w-[200px] rounded-2xl px-5 py-4 text-sm font-black text-center bg-amber-500 text-slate-950";
 }
 
 function updatePrevBtn() {
@@ -134,8 +134,8 @@ function updatePrevBtn() {
   if (!btn) return;
   btn.disabled = step === 0;
   btn.className = step === 0
-    ? "flex-1 rounded-2xl border px-5 py-4 text-sm font-bold lg:max-w-[180px] border-slate-800 bg-slate-900 text-slate-600 cursor-not-allowed"
-    : "flex-1 rounded-2xl border px-5 py-4 text-sm font-bold lg:max-w-[180px] border-slate-700 bg-[#1b2745] text-slate-100";
+    ? "w-[160px] rounded-2xl border px-5 py-4 text-sm font-bold text-center border-slate-800 bg-slate-900 text-slate-600 cursor-not-allowed"
+    : "w-[160px] rounded-2xl border px-5 py-4 text-sm font-bold text-center border-slate-700 bg-[#1b2745] text-slate-100";
 }
 
 // ─── 스텝 이동 ─────────────────────────────────────────────────────────────────
@@ -200,8 +200,8 @@ function renderStep0() {
         </div>
       </div>
     </div>` : "";
-  return `<div class="space-y-5">
-    <section class="${sectionCard} p-5">
+  return `<div class="space-y-3">
+    <section class="${sectionCard} p-4">
       <h2 class="mb-4 text-lg font-black text-white">서버 / 클래스</h2>
       <div class="space-y-4">
         <div><label class="${labelClass}">서버 선택</label>
@@ -231,8 +231,8 @@ function renderStep0() {
 function renderStep1() {
   const accountTypes = ["구글","퍼플","전화번호","페이스북","엔씨"];
   const accountHistories = ["본인 1대","거래 이력 있음"];
-  return `<div class="space-y-5">
-    <section class="${sectionCard} p-5">
+  return `<div class="space-y-3">
+    <section class="${sectionCard} p-4">
       <h2 class="mb-4 text-lg font-black text-white">기본 판매 정보</h2>
       <div class="space-y-4">
         <div><label class="${labelClass}">현재 레벨</label>
@@ -262,15 +262,15 @@ function renderStep2() {
     ["nearbyDamage","근거리 데미지"],["rangedDamage","원거리 데미지"],
     ["accuracy","명중"],["sp","SP"],["ac","AC"],["mr","MR"]
   ];
-  return `<div class="space-y-5">
-    <section class="${sectionCard} p-5">
+  return `<div class="space-y-3">
+    <section class="${sectionCard} p-4">
       <h2 class="mb-4 text-lg font-black text-white">핵심 전투 스펙</h2>
       <div class="grid grid-cols-2 gap-3">
         ${combatFields.map(([k,l])=>`<div><label class="${labelClass}">${l}</label>
           <input class="${inputClass}" data-key="${k}" value="${form[k]||""}" oninput="update('${k}',this.value)" placeholder="숫자 입력"/></div>`).join("")}
       </div>
     </section>
-    <section class="${sectionCard} p-5">
+    <section class="${sectionCard} p-4">
       <h2 class="mb-4 text-lg font-black text-white">기본 스탯</h2>
       <div class="grid grid-cols-2 gap-3">
         ${statFields.map(([code,title])=>`<div><label class="${labelClass}">${code} (${title})</label>
@@ -283,8 +283,8 @@ function renderStep2() {
 function renderStep3() {
   const skillRows = [["mythSkill","신화 스킬 수"],["legendSkill","전설 스킬 수"],["heroSkill","영웅 스킬 수"]];
   const collectRows = [["transformInfo","변신"],["dollInfo","마법인형"],["relicInfo","성물"]];
-  return `<div class="space-y-5">
-    <section class="${sectionCard} p-5">
+  return `<div class="space-y-3">
+    <section class="${sectionCard} p-4">
       <h2 class="mb-4 text-lg font-black text-white">스킬 정보</h2>
       <div class="grid grid-cols-3 gap-3">
         ${skillRows.map(([k,l])=>`<div><label class="${labelClass}">${l}</label>
@@ -293,7 +293,7 @@ function renderStep3() {
       <div class="mt-4"><label class="${labelClass}">주요 스킬명 <span class="text-xs text-slate-400">(선택)</span></label>
         <textarea class="${inputClass} min-h-[96px] resize-none" data-key="mainSkills" oninput="update('mainSkills',this.value)" placeholder="선택 입력">${form.mainSkills||""}</textarea></div>
     </section>
-    <section class="${sectionCard} p-5">
+    <section class="${sectionCard} p-4">
       <h2 class="mb-4 text-lg font-black text-white">변신 / 마법인형 / 성물 <span class="text-xs text-slate-400">(간략 입력)</span></h2>
       <div class="space-y-3">
         ${collectRows.map(([k,t])=>`<div class="rounded-2xl border border-slate-700 bg-[#1b2745] p-4">
@@ -306,8 +306,8 @@ function renderStep3() {
 }
 
 function renderStep4() {
-  return `<div class="space-y-5">
-    <section class="${sectionCard} p-5">
+  return `<div class="space-y-3">
+    <section class="${sectionCard} p-4">
       <h2 class="mb-4 text-lg font-black text-white">장비 정보 <span class="text-xs text-slate-400">(핵심만)</span></h2>
       <div class="space-y-4">
         <input class="${inputClass}" data-key="weapon" value="${form.weapon||""}" oninput="update('weapon',this.value)" placeholder="주요 무기 입력"/>
@@ -315,7 +315,7 @@ function renderStep4() {
         <input class="${inputClass}" data-key="accessories" value="${form.accessories||""}" oninput="update('accessories',this.value)" placeholder="주요 악세 입력"/>
       </div>
     </section>
-    <section class="${sectionCard} p-5">
+    <section class="${sectionCard} p-4">
       <h2 class="mb-4 text-lg font-black text-white">재화 / 추가 가치 요소</h2>
       <div class="space-y-4">
         <div class="grid grid-cols-2 gap-3">
@@ -331,14 +331,14 @@ function renderStep4() {
 function renderStep5() {
   const tradeMethods = ["이메일 변경 후 인계","계정 정보 양도","선물하기 포함 거래"];
   const supports = ["1회 지원","3일 지원","지원 불가"];
-  return `<div class="space-y-5">
-    <section class="${sectionCard} p-5">
+  return `<div class="space-y-3">
+    <section class="${sectionCard} p-4">
       <h2 class="mb-4 text-lg font-black text-white">거래 방식</h2>
       <div class="grid gap-3">
         ${tradeMethods.map(m=>choiceBtn("tradeMethod",m,m)).join("")}
       </div>
     </section>
-    <section class="${sectionCard} p-5">
+    <section class="${sectionCard} p-4">
       <h2 class="mb-4 text-lg font-black text-white">거래 안정성</h2>
       <div class="space-y-3">
         ${toggleRow("결제내역 있음","paymentHistory")}
@@ -348,7 +348,7 @@ function renderStep5() {
         ${toggleRow("활동 정지 / 제재 경험 없음","sanctionFree")}
       </div>
     </section>
-    <section class="${sectionCard} p-5">
+    <section class="${sectionCard} p-4">
       <h2 class="mb-4 text-lg font-black text-white">판매자 설명</h2>
       <div class="space-y-4">
         <div><label class="${labelClass}">거래 후 지원</label>
@@ -364,8 +364,8 @@ function renderStep5() {
 
 function renderStep6() {
   const checks = ["계정 소유권이 본인임을 확인합니다","입력한 정보가 정확함을 확인합니다","거래 규정에 동의합니다"];
-  return `<div class="space-y-5">
-    <section class="${sectionCard} p-5">
+  return `<div class="space-y-3">
+    <section class="${sectionCard} p-4">
       <h2 class="mb-4 text-lg font-black text-white">증빙 자료 등록</h2>
       <div class="grid grid-cols-2 gap-3">
         ${uploadSlots.map(slot=>`
@@ -375,7 +375,7 @@ function renderStep6() {
           </button>`).join("")}
       </div>
     </section>
-    <section class="${sectionCard} p-5">
+    <section class="${sectionCard} p-4">
       <h2 class="mb-4 text-lg font-black text-white">확인 사항</h2>
       <div class="space-y-3">
         ${checks.map(item=>`<label class="flex items-center gap-3 rounded-2xl border border-slate-700 bg-[#1b2745] px-4 py-4 text-sm text-slate-100">
@@ -396,8 +396,8 @@ function renderStep7() {
     ["계정 종류",form.accountType||"-"],["계정 이력",form.accountHistory||"-"],
     ["핵심 전투 스펙",`${dmg} / ${form.accuracy||"-"} / ${form.sp||"-"}`],
   ];
-  return `<div class="space-y-5">
-    <section class="${sectionCard} p-5">
+  return `<div class="space-y-3">
+    <section class="${sectionCard} p-4">
       <h3 class="mb-4 text-lg font-black text-white">입력 정보 요약</h3>
       <div class="grid grid-cols-2 gap-3">
         ${summaryItems.map(([k,v])=>`<div class="rounded-2xl border border-slate-700 bg-[#1b2745] px-4 py-3">
@@ -406,7 +406,7 @@ function renderStep7() {
         </div>`).join("")}
       </div>
     </section>
-    <section class="${sectionCard} p-5">
+    <section class="${sectionCard} p-4">
       <h3 class="mb-4 text-lg font-black text-white">판매 설명</h3>
       <div class="rounded-2xl border border-slate-700 bg-[#1b2745] px-4 py-4 text-sm leading-6 text-slate-200">${form.description||"입력된 판매 설명이 없습니다."}</div>
     </section>
@@ -427,7 +427,7 @@ function renderContent() {
   const focusKey = focused ? focused.dataset.key : null;
   const focusSel = focused ? focused.selectionStart : null;
 
-  area.innerHTML = `<div class="fade-up">${getStepHTML()}</div>`;
+  area.innerHTML = `<div class="fade-up max-w-2xl mx-auto">${getStepHTML()}</div>`;
 
   // 포커스 복원
   if (focusKey) {
@@ -460,39 +460,41 @@ function renderAll() {
     </button>`;
   }).join("");
 
-  const prevCls = "flex-1 rounded-2xl border px-5 py-4 text-sm font-bold lg:max-w-[180px] border-slate-800 bg-slate-900 text-slate-600 cursor-not-allowed";
+  const prevCls = "w-[160px] rounded-2xl border px-5 py-4 text-sm font-bold text-center border-slate-800 bg-slate-900 text-slate-600 cursor-not-allowed";
   const nextCls = (!isLast && !complete)
-    ? "flex-1 rounded-2xl px-5 py-4 text-sm font-black lg:max-w-[220px] bg-amber-500/40 text-slate-800 cursor-not-allowed"
-    : "flex-1 rounded-2xl px-5 py-4 text-sm font-black lg:max-w-[220px] bg-amber-500 text-slate-950";
+    ? "w-[200px] rounded-2xl px-5 py-4 text-sm font-black text-center bg-amber-500/40 text-slate-800 cursor-not-allowed"
+    : "w-[200px] rounded-2xl px-5 py-4 text-sm font-black text-center bg-amber-500 text-slate-950";
 
   document.getElementById("root").innerHTML = `
   <div class="mx-auto h-[100dvh] w-full overflow-hidden bg-[#091431] text-white shadow-[0_30px_80px_rgba(0,0,0,0.45)] flex flex-col lg:h-[calc(100dvh-48px)] lg:max-w-[1280px] lg:rounded-[32px] lg:border lg:border-slate-800">
 
-    <div class="shrink-0 border-b border-slate-800 bg-[#091431]/95 px-5 pb-4 pt-5 backdrop-blur lg:px-8 lg:pb-5 lg:pt-6">
-      <div class="mb-4 flex items-center gap-3 lg:mb-5">
-        <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#0ea5e9] shadow-md">
-          <span class="text-lg font-black text-white">M</span>
+    <div class="shrink-0 border-b border-slate-800 bg-[#091431]/95 px-4 pb-4 pt-5 backdrop-blur lg:px-6 lg:pb-5 lg:pt-6">
+      <div class="max-w-2xl mx-auto">
+        <div class="mb-4 flex items-center gap-3 lg:mb-5">
+          <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#0ea5e9] shadow-md">
+            <span class="text-lg font-black text-white">M</span>
+          </div>
+          <h1 class="text-[26px] font-black tracking-tight text-white lg:text-[30px]">리니지M 계정 판매</h1>
         </div>
-        <h1 class="text-[26px] font-black tracking-tight text-white lg:text-[30px]">리니지M 계정 판매</h1>
-      </div>
-      <div class="overflow-x-auto pb-1 hide-scrollbar">
-        <div id="step-nav" class="flex min-w-max items-center gap-2">${navBtns}</div>
-      </div>
-      <div class="mt-4">
-        <div class="text-xs font-semibold text-slate-400">STEP ${step+1} / ${steps.length}</div>
-        <div id="step-title" class="mt-1 text-lg font-black text-white">${steps[step].title}</div>
-        <div id="step-warn" class="mt-1 text-xs text-rose-300" style="${(!complete && step < steps.length-1)?'':'display:none'}">필수 입력값을 채워야 다음 단계로 이동할 수 있습니다.</div>
+        <div id="step-nav-wrap" class="overflow-x-auto pb-1 hide-scrollbar cursor-grab active:cursor-grabbing select-none">
+          <div id="step-nav" class="flex min-w-max items-center gap-2">${navBtns}</div>
+        </div>
+        <div class="mt-4">
+          <div class="text-xs font-semibold text-slate-400">STEP ${step+1} / ${steps.length}</div>
+          <div id="step-title" class="mt-1 text-lg font-black text-white">${steps[step].title}</div>
+          <div id="step-warn" class="mt-1 text-xs text-rose-300" style="${(!complete && step < steps.length-1)?'':'display:none'}">필수 입력값을 채워야 다음 단계로 이동할 수 있습니다.</div>
+        </div>
       </div>
     </div>
 
     <div class="flex flex-1 overflow-hidden">
-      <div id="content-area" class="flex-1 overflow-y-auto px-5 py-5 hide-scrollbar lg:px-8 lg:py-6">
-        <div class="fade-up">${getStepHTML()}</div>
+      <div id="content-area" class="flex-1 overflow-y-auto px-4 py-4 hide-scrollbar lg:px-6 lg:py-5">
+        <div class="fade-up max-w-2xl mx-auto">${getStepHTML()}</div>
       </div>
     </div>
 
-    <div class="shrink-0 border-t border-slate-800 bg-[#091431]/95 px-5 py-4 backdrop-blur lg:px-8 lg:py-5">
-      <div class="flex gap-3 lg:justify-end">
+    <div class="shrink-0 border-t border-slate-800 bg-[#091431]/95 px-4 py-4 backdrop-blur lg:px-6 lg:py-5">
+      <div class="max-w-2xl mx-auto flex justify-center gap-3">
         <button id="btn-prev" type="button" onclick="goPrev()" disabled class="${prevCls}">← 이전</button>
         <button id="btn-next" type="button" class="${nextCls}">${isLast?"판매 등록하기":"다음 →"}</button>
       </div>
@@ -502,6 +504,27 @@ function renderAll() {
   // btn-next onclick 설정
   const nextBtn = document.getElementById("btn-next");
   nextBtn.onclick = isLast ? ()=>alert('판매 등록이 완료되었습니다!') : goNext;
+
+  // 스텝 네비 스와이프 (마우스 + 터치)
+  const navWrap = document.getElementById("step-nav-wrap");
+  if (navWrap) {
+    let isDown = false, startX = 0, scrollLeft = 0;
+    navWrap.addEventListener("mousedown", e => {
+      isDown = true; startX = e.pageX - navWrap.offsetLeft; scrollLeft = navWrap.scrollLeft;
+    });
+    navWrap.addEventListener("mouseleave", () => isDown = false);
+    navWrap.addEventListener("mouseup", () => isDown = false);
+    navWrap.addEventListener("mousemove", e => {
+      if (!isDown) return; e.preventDefault();
+      navWrap.scrollLeft = scrollLeft - (e.pageX - navWrap.offsetLeft - startX);
+    });
+    navWrap.addEventListener("touchstart", e => {
+      startX = e.touches[0].pageX; scrollLeft = navWrap.scrollLeft;
+    }, {passive:true});
+    navWrap.addEventListener("touchmove", e => {
+      navWrap.scrollLeft = scrollLeft - (e.touches[0].pageX - startX);
+    }, {passive:true});
+  }
 
   // input에 data-key 추가 (renderContent에서도 포커스 복원에 사용)
   // -> 각 renderStep 함수 내 input/textarea에 직접 data-key 삽입
