@@ -34,7 +34,7 @@ let bartemUrl = "";
 let form = {
   server:"", serverDetail:"", characterName:"", className:"",
   level:"", combatPower:"", price:"", accountType:"구글", accountHistory:"본인 1대",
-  paymentHistory:false, doubleLinked:false, giftAvailable:false, recoverySafe:false, sanctionFree:false, hasCustomerId:false,
+  paymentHistory:false, doubleLinked:false, noDoubleLinked:false, giftAvailable:false, recoverySafe:false, sanctionFree:false, hasCustomerId:false,
   nearbyDamage:"", rangedDamage:"", accuracy:"", sp:"", ac:"", mr:"",
   str:"", dex:"", con:"", int:"", wis:"", cha:"",
   mythSkill:"", legendSkill:"", heroSkill:"", mainSkills:"",
@@ -75,10 +75,20 @@ const inputClass = "w-full rounded-2xl border border-slate-700 bg-[#202d4d] px-4
 // ─── update: 스크롤 유지하며 부분 업데이트 ────────────────────────────────────
 function update(key, value) {
   form[key] = value;
-  // 서버 변경 시 서버상세 리셋 + 콘텐츠 재렌더 필요
   if (key === 'server') { form.serverDetail = ''; renderContent(); }
+  else { updateChoiceBtns(key); }
   updateHeader();
   updateBottomBar();
+}
+
+// choiceBtn 선택 상태만 DOM에서 직접 갱신
+function updateChoiceBtns(key) {
+  document.querySelectorAll(`[data-choice-key="${key}"]`).forEach(btn => {
+    const active = btn.dataset.choiceValue === form[key];
+    btn.className = `rounded-2xl border px-4 py-3 text-sm font-bold transition ${
+      active ? "border-amber-400 bg-amber-500/15 text-amber-300" : "border-slate-700 bg-[#1b2745] text-slate-200"
+    }`;
+  });
 }
 
 function toggle(key) {
@@ -180,7 +190,13 @@ function toggleRow(label, key, invert=false) {
 
 function choiceBtn(key, value, label) {
   const active = form[key] === value;
-  return `<button type="button" onclick="update('${key}','${value}')" class="rounded-2xl border px-4 py-3 text-sm font-bold transition ${active?"border-amber-400 bg-amber-500/15 text-amber-300":"border-slate-700 bg-[#1b2745] text-slate-200"}">${label}</button>`;
+  return `<button type="button" data-choice-key="${key}" data-choice-value="${value}" onclick="selectChoice(this)" class="rounded-2xl border px-4 py-3 text-sm font-bold transition ${active?"border-amber-400 bg-amber-500/15 text-amber-300":"border-slate-700 bg-[#1b2745] text-slate-200"}">${label}</button>`;
+}
+
+function selectChoice(btn) {
+  const key = btn.dataset.choiceKey;
+  const value = btn.dataset.choiceValue;
+  update(key, value);
 }
 
 // ─── 스텝 HTML ─────────────────────────────────────────────────────────────────
@@ -343,7 +359,7 @@ function renderStep5() {
       <div class="space-y-3">
         ${toggleRow("고객번호 있음","hasCustomerId")}
         ${toggleRow("결제내역 있음","paymentHistory")}
-        ${toggleRow("이중연동 없음","doubleLinked",true)}
+        ${toggleRow("이중연동 없음","noDoubleLinked")}
         ${toggleRow("선물 가능","giftAvailable")}
         ${toggleRow("복구 이력 없음","recoverySafe")}
         ${toggleRow("활동 정지 / 제재 경험 없음","sanctionFree")}
